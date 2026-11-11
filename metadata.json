@@ -1,0 +1,6 @@
+{
+  "name": "Web2APK Studio - Convertidor Web a APK Nativo Optimizado",
+  "description": "Sistema profesional para convertir cualquier sitio web responsive en una aplicación Android APK optimizada, sin alterar su funcionamiento original y manteniendo compatibilidad total.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
