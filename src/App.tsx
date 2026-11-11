@@ -12,6 +12,7 @@ import { AuditReport } from './components/AuditReport';
 import { BuildGuideModal } from './components/BuildGuideModal';
 import { ApkConfig } from './types/apkConfig';
 import { downloadAndroidProjectZip } from './utils/zipExporter';
+import { downloadDirectApk } from './utils/apkDirectBuilder';
 import { 
   ShieldCheck, 
   Sparkles, 
@@ -28,9 +29,9 @@ import {
 } from 'lucide-react';
 
 const INITIAL_CONFIG: ApkConfig = {
-  appName: 'Mi Tienda Móvil',
-  packageName: 'com.mitienda.app',
-  webUrl: 'https://demo-tienda.ejemplo.app',
+  appName: 'CompuApps',
+  packageName: 'com.compuapps.app',
+  webUrl: 'https://compuapps.great-site.net/',
   versionName: '1.0.0',
   versionCode: 1,
   themeColor: '#0f172a',
@@ -78,30 +79,17 @@ export default function App() {
   const [activeView, setActiveView] = useState<'simulator' | 'config' | 'code' | 'audit'>('simulator');
   const [activeDemo, setActiveDemo] = useState<string>('ecommerce');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDirectDownloading, setIsDirectDownloading] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const handleUpdateConfig = (newSettings: Partial<ApkConfig>) => {
     setConfig(prev => ({ ...prev, ...newSettings }));
-  };
-
-  const handleSelectSample = (url: string, name: string, themeColor: string) => {
-    const cleanPkg = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    setConfig(prev => ({
-      ...prev,
-      webUrl: url,
-      appName: name,
-      packageName: `com.${cleanPkg || 'app'}.app`,
-      themeColor: themeColor,
-      statusBarColor: themeColor,
-      navBarColor: themeColor
-    }));
-    showToast(`Plantilla cargada: ${name}`);
   };
 
   const handleDownloadZip = async () => {
@@ -117,6 +105,19 @@ export default function App() {
     }
   };
 
+  const handleDownloadDirectApk = async () => {
+    try {
+      setIsDirectDownloading(true);
+      await downloadDirectApk(config);
+      showToast('¡Archivo .APK descargado directamente (sin procesos externos)!');
+    } catch (error) {
+      console.error(error);
+      showToast('Error al sintetizar el paquete .APK');
+    } finally {
+      setIsDirectDownloading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
       {/* Top Bar following contract */}
@@ -125,6 +126,8 @@ export default function App() {
         setActiveView={setActiveView}
         onDownloadZip={handleDownloadZip}
         isDownloading={isDownloading}
+        onDownloadDirectApk={handleDownloadDirectApk}
+        isDirectDownloading={isDirectDownloading}
       />
 
       {/* Hero Notification & Architecture Banner */}
@@ -158,11 +161,11 @@ export default function App() {
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-emerald-400" />
               <h2 className="text-xs font-bold text-slate-200">
-                Previsualización en Vivo de la APK
+                Visor Móvil Real (Tu Web en Android)
               </h2>
             </div>
-            <span className="text-[11px] text-slate-500">
-              Interactivo táctil
+            <span className="text-[11px] text-emerald-400 font-semibold">
+              Tu web real sin simulaciones
             </span>
           </div>
 
@@ -231,7 +234,6 @@ export default function App() {
               <ConfigEditor
                 config={config}
                 onChange={handleUpdateConfig}
-                onSelectSample={handleSelectSample}
               />
             )}
 

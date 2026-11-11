@@ -6,13 +6,17 @@ interface NavbarProps {
   setActiveView: (view: 'simulator' | 'config' | 'code' | 'audit') => void;
   onDownloadZip: () => void;
   isDownloading: boolean;
+  onDownloadDirectApk: () => void;
+  isDirectDownloading: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeView,
   setActiveView,
   onDownloadZip,
-  isDownloading
+  isDownloading,
+  onDownloadDirectApk,
+  isDirectDownloading
 }) => {
   return (
     <header className="flex items-center justify-between gap-8 px-6 py-4 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40">
@@ -36,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             activeView === 'simulator' ? 'text-emerald-400 font-semibold' : ''
           }`}
         >
-          Simulador Móvil
+          Visor Móvil Real
         </button>
         <button
           onClick={() => setActiveView('config')}
@@ -64,15 +68,23 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
       </nav>
 
-      {/* Zone 3: 1 primary action */}
-      <div className="flex items-center gap-3 shrink-0">
+      {/* Zone 3: Primary actions */}
+      <div className="flex items-center gap-2.5 shrink-0">
+        <button
+          onClick={onDownloadDirectApk}
+          disabled={isDirectDownloading}
+          className="px-3.5 py-2 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-50"
+        >
+          <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>{isDirectDownloading ? 'Generando...' : 'Descargar .APK Directo'}</span>
+        </button>
+
         <button
           onClick={onDownloadZip}
           disabled={isDownloading}
-          className="px-4 py-2 text-xs font-bold text-slate-950 bg-emerald-500 hover:bg-emerald-400 rounded-xl transition-all whitespace-nowrap shrink-0 flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50"
+          className="hidden sm:flex px-3.5 py-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all whitespace-nowrap shrink-0 items-center gap-1.5 border border-slate-700"
         >
-          <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span>{isDownloading ? 'Empaquetando...' : 'Descargar Proyecto .ZIP'}</span>
+          <span>Proyecto Android (.ZIP)</span>
         </button>
       </div>
     </header>

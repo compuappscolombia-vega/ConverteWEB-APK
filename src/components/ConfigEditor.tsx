@@ -15,23 +15,45 @@ import {
   RotateCcw,
   Sparkles,
   Info,
-  Check
+  Check,
+  RefreshCw
 } from 'lucide-react';
 import { ApkConfig } from '../types/apkConfig';
-import { SAMPLE_WEBSITES } from '../utils/sampleWebsites';
 
 interface ConfigEditorProps {
   config: ApkConfig;
   onChange: (updated: Partial<ApkConfig>) => void;
-  onSelectSample: (url: string, name: string, themeColor: string) => void;
 }
 
 export const ConfigEditor: React.FC<ConfigEditorProps> = ({
   config,
   onChange,
-  onSelectSample
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'webview' | 'permissions' | 'offline'>('general');
+  const [isDetecting, setIsDetecting] = useState(false);
+
+  const handleAutoDetect = async () => {
+    if (!config.webUrl) return;
+    try {
+      setIsDetecting(true);
+      const res = await fetch(`/api/inspect-site?url=${encodeURIComponent(config.webUrl)}`);
+      const data = await res.json();
+      if (data && data.success) {
+        const cleanName = data.title || config.appName;
+        const cleanPkg = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        onChange({
+          appName: cleanName,
+          packageName: `com.${cleanPkg || 'app'}.app`,
+          themeColor: data.themeColor || config.themeColor,
+          statusBarColor: data.themeColor || config.statusBarColor
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDetecting(false);
+    }
+  };
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex flex-col h-full">
@@ -68,47 +90,34 @@ export const ConfigEditor: React.FC<ConfigEditorProps> = ({
         {/* TAB 1: GENERAL */}
         {activeTab === 'general' && (
           <div className="space-y-5">
-            {/* Quick URL presets */}
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-2">
-                Plantillas y Ejemplos de Sitios Web Responsive:
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {SAMPLE_WEBSITES.map((site) => (
-                  <button
-                    key={site.id}
-                    onClick={() => onSelectSample(site.url, site.name, site.themeColor)}
-                    className="p-3 bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 rounded-xl text-left transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">
-                        {site.name}
-                      </span>
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: site.themeColor }} />
-                    </div>
-                    <span className="text-[11px] text-slate-500 block mt-1 line-clamp-1">{site.description}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Target URL */}
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                URL del Sitio Web a convertir en APK <span className="text-emerald-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  URL del Sitio Web a convertir en APK <span className="text-emerald-400">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoDetect}
+                  disabled={isDetecting}
+                  className="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isDetecting ? 'animate-spin' : ''}`} />
+                  <span>Autodetectar Nombre y Color</span>
+                </button>
+              </div>
               <div className="relative">
                 <Globe className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
                 <input
                   type="url"
                   value={config.webUrl}
                   onChange={(e) => onChange({ webUrl: e.target.value })}
-                  placeholder="https://mi-sitio-web-responsive.com"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                  placeholder="https://compuapps.great-site.net/"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                Puede ser cualquier web responsive (e-commerce, dashboard, blog, app web). Se conservará exactamente como se ve en el navegador móvil.
+                Introduce la URL exacta de tu página web responsive. Esta URL será cargada por el motor nativo de Android en el archivo APK generado.
               </p>
             </div>
 
